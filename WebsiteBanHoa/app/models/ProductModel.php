@@ -99,5 +99,19 @@ class ProductModel
         } 
         return false; 
     } 
+
+    // Phương thức tìm kiếm sản phẩm theo từ khóa
+    public function searchProducts($keyword)
+    {
+        $query = "SELECT p.id, p.name, p.description, p.price, p.image, c.name as category_name 
+                  FROM " . $this->table_name . " p 
+                  LEFT JOIN category c ON p.category_id = c.id 
+                  WHERE p.name LIKE :keyword OR p.description LIKE :keyword";
+        $stmt = $this->conn->prepare($query);
+        $keyword = "%" . $keyword . "%"; // Thêm % để tìm kiếm gần đúng
+        $stmt->bindParam(':keyword', $keyword, PDO::PARAM_STR);
+        $stmt->execute();
+        return $stmt->fetchAll(PDO::FETCH_OBJ);
+    }
 } 
 ?> 

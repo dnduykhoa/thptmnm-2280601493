@@ -15,11 +15,29 @@ class ProductController
         $this->productModel = new ProductModel($this->db); 
     } 
  
-    public function index() 
-    { 
-        $products = $this->productModel->getProducts(); 
-        include 'app/views/product/list.php'; 
-    } 
+    public function index()
+    {
+        // Lấy tham số tìm kiếm từ URL
+        $search = isset($_GET['search']) ? trim($_GET['search']) : '';
+        
+        // Gọi model để lấy danh sách sản phẩm
+        if ($search) {
+            // Tìm kiếm sản phẩm theo từ khóa
+            $products = $this->productModel->searchProducts($search);
+        } else {
+            // Lấy tất cả sản phẩm nếu không có từ khóa tìm kiếm
+            $products = $this->productModel->getProducts();
+        }
+
+        // Chuẩn bị dữ liệu cho view
+        $data = [
+            'products' => $products,
+            'search' => $search // Gửi từ khóa tìm kiếm để giữ lại trong input
+        ];
+    
+        // Gửi dữ liệu tới view
+        include 'app/views/product/list.php';
+    }
  
     public function show($id) 
     { 
@@ -38,7 +56,8 @@ class ProductController
         include_once 'app/views/product/add.php'; 
     } 
  
-    public function save() {
+    public function save() 
+    {
         if ($_SERVER['REQUEST_METHOD'] == 'POST') {
             $name = $_POST['name'] ?? '';
             $description = $_POST['description'] ?? '';
@@ -107,7 +126,8 @@ class ProductController
         } 
     } 
  
-    private function uploadImage($file) {
+    private function uploadImage($file) 
+    {
         $target_dir = "uploads/";
 
         // Kiểm tra và tạo thư mục nếu chưa tồn tại
@@ -130,9 +150,10 @@ class ProductController
         }
 
         // Chỉ cho phép một số định dạng hình ảnh nhất định
-        $allowed_types = ["jpg", "png", "jpeg", "gif"];
+        $allowed_types = ["jpg", "png", "jpeg", "gif", "webp"];
+        // Kiểm tra định dạng file
         if (!in_array($imageFileType, $allowed_types)) {
-            throw new Exception("Chỉ cho phép các định dạng JPG, JPEG, PNG và GIF.");
+            throw new Exception("Chỉ cho phép các định dạng JPG, JPEG, PNG, GIF và WEBPWEBP.");
         }
 
         // Lưu file
@@ -162,10 +183,106 @@ class ProductController
             'price' => $product->price, 
             'quantity' => 1, 
             'image' => $product->image 
-        ]; 
+            ]; 
+        }   
+        header('Location: /WebsiteBanHoa/Product/cart'); 
     } 
 
-    header('Location: /WebsiteBanHoa/Product/cart'); 
+    public function cart() 
+    { 
+        $cart = isset($_SESSION['cart']) ? $_SESSION['cart'] : []; 
+        include 'app/views/product/cart.php'; 
     } 
-}
+
+    public function increaseQuantity($id) 
+    {
+        if (isset($_SESSION['cart'][$id])) {
+            $_SESSION['cart'][$id]['quantity']++;
+        }
+        header('Location: /WebsiteBanHoa/Product/cart');
+    }
+
+    public function decreaseQuantity($id) 
+    {
+        if (isset($_SESSION['cart'][$id])) {
+            $_SESSION['cart'][$id]['quantity']--;
+            if ($_SESSION['cart'][$id]['quantity'] <= 0) {
+                unset($_SESSION['cart'][$id]);
+            }
+        }
+        header('Location: /WebsiteBanHoa/Product/cart');
+    }
+
+    public function removeFromCart($id) 
+    {
+        if (isset($_SESSION['cart'][$id])) {
+            unset($_SESSION['cart'][$id]);
+        }
+        header('Location: /WebsiteBanHoa/Product/cart');
+    }
+ 
+    public function checkout() 
+    { 
+        include 'app/views/product/checkout.php'; 
+    } 
+
+    public function processCheckout() 
+    { 
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') { 
+            $name = $_POST['name']; 
+            $phone = $_POST['phone']; 
+            $address = $_POST['address']; 
+ 
+            // Kiểm tra giỏ hàng 
+            if (!isset($_SESSION['cart']) || empty($_SESSION['cart'])) { 
+                echo "Giỏ hàng trống."; 
+                return; 
+            } 
+ 
+            // Bắt đầu giao dịch
+            $this->db->beginTransaction(); 
+ 
+            try { 
+                // Lưu thông tin đơn hàng vào bảng orders 
+                $query = "INSERT INTO orders (name, phone, address) VALUES (:name, :phone, :address)"; 
+                $stmt = $this->db->prepare($query); 
+                $stmt->bindParam(':name', $name); 
+                $stmt->bindParam(':phone', $phone); 
+                $stmt->bindParam(':address', $address); 
+                $stmt->execute(); 
+                $order_id = $this->db->lastInsertId(); 
+ 
+                // Lưu chi tiết đơn hàng vào bảng order_details 
+                $cart = $_SESSION['cart']; 
+                foreach ($cart as $product_id => $item) { 
+                    $query = "INSERT INTO order_details (order_id, product_id, quantity, price) VALUES (:order_id, :product_id, :quantity, :price)"; 
+                    $stmt = $this->db->prepare($query); 
+                    $stmt->bindParam(':order_id', $order_id); 
+                    $stmt->bindParam(':product_id', $product_id); 
+                    $stmt->bindParam(':quantity', $item['quantity']); 
+                    $stmt->bindParam(':price', $item['price']); 
+                    $stmt->execute(); 
+                } 
+
+                // Xóa giỏ hàng sau khi đặt hàng thành công 
+                unset($_SESSION['cart']); 
+ 
+                // Commit giao dịch 
+                $this->db->commit(); 
+ 
+                // Chuyển hướng đến trang xác nhận đơn hàng 
+                header('Location: /WebsiteBanHoa/Product/orderConfirmation'); 
+            } catch (Exception $e) { 
+                // Rollback giao dịch nếu có lỗi 
+                $this->db->rollBack(); 
+                echo "Đã xảy ra lỗi khi xử lý đơn hàng: " . $e->getMessage(); 
+            } 
+        } 
+    } 
+
+    public function orderConfirmation() 
+    { 
+        include 'app/views/product/orderConfirmation.php'; 
+    }
+} 
 ?>
