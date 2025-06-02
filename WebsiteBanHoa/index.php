@@ -1,8 +1,20 @@
 <?php
 session_start();
+require_once 'app/config/database.php';
 require_once 'app/models/ProductModel.php';
+require_once 'app/models/CategoryModel.php';
+require_once 'app/models/AccountModel.php';
+require_once 'app/controllers/AccountController.php';
 require_once 'app/helpers/SessionHelper.php';
 
+// Khởi tạo tài khoản admin nếu chưa tồn tại
+$accountModel = new AccountModel((new Database())->getConnection());
+// if (!$accountModel->getAccountByUsername('admin')) {
+//     $accountController = new AccountController();
+//     $accountController->createAdmin();
+// }
+
+// Product/Add
 $url = $_GET['url'] ?? '';
 $url = rtrim($url, '/');
 $url = filter_var($url, FILTER_SANITIZE_URL);

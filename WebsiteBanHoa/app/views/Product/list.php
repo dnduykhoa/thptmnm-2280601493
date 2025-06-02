@@ -10,8 +10,10 @@
                 <input type="text" name="search" class="form-control me-2" placeholder="Tìm kiếm sản phẩm..." value="<?php echo isset($_GET['search']) ? htmlspecialchars($_GET['search'], ENT_QUOTES, 'UTF-8') : ''; ?>">
                 <button class="btn btn-outline-primary" type="submit" data-toggle="tooltip" title="Tìm kiếm sản phẩm"><i class="bi bi-search"></i></button>
             </form>
-            <!-- Nút thêm sản phẩm -->
-            <a href="/WebsiteBanHoa/Product/add" class="btn btn-primary px-4" data-toggle="tooltip" title="Thêm sản phẩm mới"><i class="bi bi-plus-circle"></i> Thêm sản phẩm</a>
+            <?php if (SessionHelper::isAdmin()): ?>
+                <!-- Nút thêm sản phẩm (chỉ hiển thị cho admin) -->
+                <a href="/WebsiteBanHoa/Product/add" class="btn btn-primary px-4" data-toggle="tooltip" title="Thêm sản phẩm mới"><i class="bi bi-plus-circle"></i> Thêm sản phẩm</a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -48,8 +50,10 @@
                         <!-- Nút hành động -->
                         <div class="card-footer bg-transparent border-top-0 d-flex flex-wrap gap-2">
                             <a href="/WebsiteBanHoa/Product/show/<?php echo $product->id; ?>" class="btn btn-sm btn-outline-primary" data-toggle="tooltip" title="Chi tiết"><i class="bi bi-eye"></i></a>
-                            <a href="/WebsiteBanHoa/Product/edit/<?php echo $product->id; ?>" class="btn btn-sm btn-outline-warning" data-toggle="tooltip" title="Sửa"><i class="bi bi-pencil"></i></a>
-                            <a href="/WebsiteBanHoa/Product/delete/<?php echo $product->id; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" data-toggle="tooltip" title="Xóa"><i class="bi bi-trash"></i></a>
+                            <?php if (SessionHelper::isAdmin()): ?>
+                                <a href="/WebsiteBanHoa/Product/edit/<?php echo $product->id; ?>" class="btn btn-sm btn-outline-warning" data-toggle="tooltip" title="Sửa"><i class="bi bi-pencil"></i></a>
+                                <a href="/WebsiteBanHoa/Product/delete/<?php echo $product->id; ?>" class="btn btn-sm btn-outline-danger" onclick="return confirm('Bạn có chắc chắn muốn xóa sản phẩm này?');" data-toggle="tooltip" title="Xóa"><i class="bi bi-trash"></i></a>
+                            <?php endif; ?>
                             <a href="/WebsiteBanHoa/Product/addToCart/<?php echo $product->id; ?>" class="btn btn-sm btn-outline-primary ms-auto" data-toggle="tooltip" title="Thêm vào giỏ hàng"><i class="bi bi-cart-plus"></i></a>
                         </div>
                     </div>
