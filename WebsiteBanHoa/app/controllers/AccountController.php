@@ -44,7 +44,7 @@ class AccountController {
             $account = $this->accountModel->getAccountByUsername($username); 
  
             if($account){ 
-                $errors['account'] = "Tài khoản này đã có người đăng kýký"; 
+                $errors['account'] = "Tài khoản này đã có người đăng ký"; 
             } 
              
             if(count($errors) > 0){ 
@@ -62,40 +62,55 @@ class AccountController {
     } 
 
     function logout(){ 
-         
+        
+        unset($_SESSION['id']);
         unset($_SESSION['username']); 
-        unset($_SESSION['role']); 
+        unset($_SESSION['role']);
  
         header('Location: /WebsiteBanHoa/product'); 
     } 
 
-    public function checkLogin(){ 
-         // Kiểm tra xem liệu form đã được submit 
-         if ($_SERVER['REQUEST_METHOD'] == 'POST') { 
-            $username = $_POST['username'] ?? ''; 
-            $password = $_POST['password'] ?? ''; 
- 
-            $account = $this->accountModel->getAccountByUserName($username); 
-            if ($account) { 
-                $pwd_hashed = $account->password; 
-                //check mat khau 
-                if (password_verify($password, $pwd_hashed)) { 
- 
-                    session_start(); 
- 
-                    // $_SESSION['user_id'] = $account->id; 
-                    // $_SESSION['user_role'] = $account->role; 
+    public function checkLogin()
+    {
+        if ($_SERVER['REQUEST_METHOD'] == 'POST') {
+            $username = $_POST['username'] ?? '';
+            $password = $_POST['password'] ?? '';
+        
+            $account = $this->accountModel->getAccountByUsername($username);
+        
+        if ($account && !empty($account->username)) {
+            $pwd_hashed = $account->password;
+            if (password_verify($password, $pwd_hashed)) {
+                session_start();
+                
+                if (!isset($_SESSION['username'])) { 
                     $_SESSION['username'] = $account->username; 
- 
-                    header('Location: /WebsiteBanHoa/product'); 
-                    exit; 
+                    $_SESSION['role'] = $account->role; 
                 } 
-                else { 
-                    echo "Password incorrect."; 
-                } 
-            } else { 
-                echo "Báo lỗi không tìm thấy tài khoảnkhoản"; 
-            } 
-        } 
-    } 
+                header('Location: /WebsiteBanHoa/product'); 
+                exit; 
+            } else {
+                $errors[] = "Mật khẩu không đúng.";
+                include_once 'app/views/account/login.php';
+            }
+        } else {
+            $errors[] = "Không tìm thấy tài khoản.";
+            include_once 'app/views/account/login.php';
+        }
+        }
+    }
+    
+    public function createAdmin() {
+        $username = 'admin';
+        $name = 'Admin';
+        $password = 'admin123';
+
+        $result = $this->accountModel->createAdmin($username, $name, $password);
+
+        if ($result) {
+            echo "Tài khoản admin đã được tạo thành công!";
+        } else {
+            echo "Không thể tạo tài khoản admin. Tài khoản có thể đã tồn tại hoặc có lỗi xảy ra.";
+        }
+    }
 }

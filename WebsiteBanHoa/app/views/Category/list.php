@@ -13,10 +13,12 @@
                     <i class="bi bi-search"></i>
                 </button>
             </form>
-            <!-- Nút thêm danh mục -->
-            <a href="/WebsiteBanHoa/Category/add" class="btn btn-primary px-4" data-bs-toggle="tooltip" title="Thêm danh mục mới">
-                <i class="bi bi-plus-circle-fill"></i> Thêm danh mục
-            </a>
+            <?php if (SessionHelper::isAdmin()): ?>
+                <!-- Nút thêm danh mục -->
+                <a href="/WebsiteBanHoa/Category/add" class="btn btn-primary px-4" data-bs-toggle="tooltip" title="Thêm danh mục mới">
+                    <i class="bi bi-plus-circle-fill"></i> Thêm danh mục
+                </a>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -45,16 +47,19 @@
                                 <td><?php echo htmlspecialchars($category->name, ENT_QUOTES, 'UTF-8'); ?></td>
                                 <td class="text-center">
                                     <div class="d-flex justify-content-center gap-2">
-                                        <a href="/WebsiteBanHoa/Category/edit/<?php echo $category->id; ?>" 
-                                           class="btn btn-outline-warning btn-action rounded-circle" 
-                                           data-bs-toggle="tooltip" title="Sửa danh mục">
-                                            <i class="bi bi-pencil-fill"></i>
-                                        </a>
-                                        <a href="/WebsiteBanHoa/Category/delete/<?php echo $category->id; ?>" 
-                                           class="btn btn-outline-danger btn-action rounded-circle" 
-                                           onclick="return confirm('Bạn có chắc muốn xóa danh mục này?');" 
-                                           data-bs-toggle="tooltip" title="Xóa danh mục">
+                                        <?php if (SessionHelper::isAdmin()): ?>
+                                            <a href="/WebsiteBanHoa/Category/edit/<?php echo $category->id; ?>" 
+                                            class="btn btn-outline-warning btn-action rounded-circle" 
+                                            data-bs-toggle="tooltip" title="Sửa danh mục">
+                                                <i class="bi bi-pencil-fill"></i>
+                                            </a>
+                                            <a href="/WebsiteBanHoa/Category/delete/<?php echo $category->id; ?>" 
+                                            class="btn btn-outline-danger btn-action rounded-circle" 
+                                            onclick="return confirm('Bạn có chắc muốn xóa danh mục này?');" 
+                                            data-bs-toggle="tooltip" title="Xóa danh mục">
                                             <i class="bi bi-trash-fill"></i>
+                                        </a>
+                                        <?php endif; ?>
                                         </a>
                                     </div>
                                 </td>
